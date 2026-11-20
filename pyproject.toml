@@ -1,0 +1,39 @@
+[project]
+name = "sglang"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "msgpack>=1.2.4",
+    "numpy>=2.5.4",
+    "pydantic>=2.14.3",
+    "pyzmq>=27.3.0",
+    "transformers>=5.23.0",
+]
+
+[project.optional-dependencies]
+cpu = ["torch"]
+cu130 = ["torch"]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "cu130" },
+    ],
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu130", extra = "cu130" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
