@@ -10,8 +10,9 @@ from .utils import serialize_type, deserialize_type
 class BaseMessage:
     message_type: ClassVar[str]
 
-    def encoder(self) -> Dict:
-        return serialize_type(self)
+    @staticmethod
+    def encoder(obj) -> Dict:
+        return serialize_type(obj)
 
     @staticmethod
     def decoder(data: Dict) -> BaseMessage:

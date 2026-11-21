@@ -12,7 +12,7 @@ from ..protocol.generate_params import GenerateParams
 @dataclass
 class BackendMsg(BaseMessage):
     message_type: ClassVar[str] = "backend"
-    uid: str
+    uid: int
     input_ids: torch.Tensor
     sampling_params: SamplingParams
     generate_params: GenerateParams
@@ -27,7 +27,7 @@ class BackendBatchMsg(BaseMessage):
 @dataclass
 class BackendAbortMsg(BaseMessage):
     message_type: ClassVar[str] = "backend-abort"
-    uid: str
+    uid: int
 
 @register_message
 @dataclass

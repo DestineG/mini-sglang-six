@@ -9,7 +9,7 @@ from .utils import register_message
 @dataclass
 class FrontendMsg(BaseMessage):
     message_type: ClassVar[str] = "frontend"
-    uid: str
+    uid: int
     incremental_output: str
     finished: bool
 

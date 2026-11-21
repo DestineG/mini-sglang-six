@@ -11,7 +11,7 @@ from ..protocol.generate_params import GenerateParams
 @dataclass
 class TokenizeMsg(BaseMessage):
     message_type: ClassVar[str] = "tokenize"
-    uid: str
+    uid: int
     text: str | List[Dict[str, str]]
     sampling_params: SamplingParams
     generate_params: GenerateParams
@@ -26,7 +26,7 @@ class TokenizeBatchMsg(BaseMessage):
 @dataclass
 class DeTokenizeMsg(BaseMessage):
     message_type: ClassVar[str] = "detokenize"
-    uid: str
+    uid: int
     next_token: int
     finished: bool
 
@@ -40,7 +40,7 @@ class DeTokenizeBatchMsg(BaseMessage):
 @dataclass
 class TokenizeAbortMsg(BaseMessage):
     message_type: ClassVar[str] = "tokenize-abort"
-    uid: str
+    uid: int
 
 @register_message
 @dataclass
