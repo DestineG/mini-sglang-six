@@ -24,7 +24,7 @@ class BackendArgs(CommonArgs):
     dtype: torch.dtype
     max_running_req: int = 256
     attention_backend: str = "auto"
-    moe_attention: str = "auto"
+    moe_backend: str = "auto"
     cuda_graph_bs: List[int] | None = None
     cuda_graph_max_bs: int | None = None
     page_size: int = 1

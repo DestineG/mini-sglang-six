@@ -12,11 +12,11 @@ class TokenizeArgs(CommonArgs):
         if self.num_tokenizer < 1:
             raise ValueError("num_tokenizer must be >= 1")
 
-        if self.num_detokenizer < 0:
-            raise ValueError("num_detokenizer must be >= 0")
+        if not 0 <= self.num_detokenizer <= 1:
+            raise ValueError("num_detokenizer must be 0 or 1")
 
         if self.num_tokenizer > 1 and self.num_detokenizer == 0:
-            raise ValueError("Multiple tokenizers require at least one detokenizer")
+            raise ValueError("Multiple tokenizers require one detokenizer")
 
     @property
     def is_shared_mode(self) -> bool:
