@@ -19,7 +19,7 @@ class BaseKVCachePool(ABC):
         v: torch.Tensor,
         out_loc: torch.Tensor,
         layer_idx: int
-    ) -> torch.Tensor: ...
+    ) -> None: ...
 
     @property
     @abstractmethod
@@ -38,7 +38,7 @@ class BaseCacheHandle(ABC):
     cached_len: int
 
     @abstractmethod
-    def get_matched_indices(self) -> torch.Tensor: ...
+    def get_prefix_indices(self) -> torch.Tensor: ...
 
 class MatchResult(NamedTuple):
     cuda_handle: BaseCacheHandle

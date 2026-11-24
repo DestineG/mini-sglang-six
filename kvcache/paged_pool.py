@@ -44,13 +44,13 @@ class PagedKVCache(BaseKVCachePool):
         k: torch.Tensor,
         v: torch.Tensor,
         out_loc: torch.Tensor,
-        layer_id: int
+        layer_idx: int
     ):
         from ..kernel.store import store_cache
 
         store_cache(
-            k_cache=self._k_buffer[layer_id].view(self._storage_shape),
-            v_cache=self._v_buffer[layer_id].view(self._storage_shape),
+            k_cache=self._k_buffer[layer_idx].view(self._storage_shape),
+            v_cache=self._v_buffer[layer_idx].view(self._storage_shape),
             indices=out_loc,
             k=k,
             v=v,
