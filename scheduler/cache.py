@@ -25,7 +25,7 @@ class CacheManager:
         self.page_size = page_size
         self.page_table = page_table
 
-    def match_req(self, request: Request) -> MatchResult:
+    def match_req(self, request: Request) -> Tuple[MatchResult, int]:
         input_len = len(request.input_ids)
         assert input_len > 0, "Input length must be greater than 0."
         # 最后一个 token 未填充，不必参加匹配
@@ -42,11 +42,19 @@ class CacheManager:
     def available_pages(self) -> int:
         return self.available_size // self.page_size
 
-    def lock(self, handle: BaseCacheHandle):
-        self.prefix_cache.lock_handle(handle, unlock=False)
+    def lock(
+        self,
+        handle: BaseCacheHandle,
+        end_handle: BaseCacheHandle | None = None
+    ):
+        self.prefix_cache.lock_handle(handle, unlock=False, end_handle=end_handle)
 
-    def unlock(self, handle: BaseCacheHandle):
-        self.prefix_cache.lock_handle(handle, unlock=True)
+    def unlock(
+        self,
+        handle: BaseCacheHandle,
+        end_handle: BaseCacheHandle | None = None
+    ):
+        self.prefix_cache.lock_handle(handle, unlock=True, end_handle=end_handle)
 
     def _allocate(self, needed_pages: int) -> torch.Tensor:
         if needed_pages > (free_pages := len(self.free_slots)):

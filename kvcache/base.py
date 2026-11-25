@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 import torch
 
@@ -57,14 +57,15 @@ class BasePrefixCache(ABC):
     def lock_handle(
         self,
         handle: BaseCacheHandle,
-        unlock: bool = False
+        unlock: bool = False,
+        end_handle: BaseCacheHandle | None = None
     ): ...
 
     @abstractmethod
     def match_prefix(
         self,
         input_ids: torch.Tensor
-    ) -> MatchResult: ...
+    ) -> Tuple[MatchResult, int]: ...
 
     @abstractmethod
     def insert_prefix(

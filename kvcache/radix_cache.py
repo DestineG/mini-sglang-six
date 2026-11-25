@@ -128,11 +128,20 @@ class RadixPrefixCache(BasePrefixCache):
     def lock_handle(
         self,
         handle: RadixCacheHandle,
-        unlock: bool = False
+        unlock: bool = False,
+        end_handle: RadixCacheHandle | None = None
     ):
+        # 操作包含起点，不包含终点；默认到根节点为止
+        end_node = self.root_node if end_handle is None else end_handle.node
+        check_node = handle.node
+        while check_node is not end_node:
+            if check_node.is_root():
+                raise ValueError("End handle is not an ancestor of the start handle")
+            check_node = check_node.parent
+
         node = handle.node
         if unlock:
-            while not node.is_root():
+            while node is not end_node:
                 node.ref_count -= 1
                 assert node.ref_count >= 0
                 if node.ref_count == 0:
@@ -140,15 +149,16 @@ class RadixPrefixCache(BasePrefixCache):
                     self.protected_size -= node.length
                 node = node.parent
         else:
-            while not node.is_root():
+            while node is not end_node:
                 if node.ref_count == 0:
                     self.evictable_size -= node.length
                     self.protected_size += node.length
                 node.ref_count += 1
                 node = node.parent
 
-    def _tree_walk(self, input_ids: torch.Tensor) -> Tuple[RadixTreeNode, int]:
+    def _tree_walk(self, input_ids: torch.Tensor) -> Tuple[RadixTreeNode, int, int]:
         prefix_len = 0
+        matched_evictable_slots = 0
         indice_len = len(input_ids)
         node = self.root_node
         tic = time.monotonic_ns()
@@ -157,7 +167,7 @@ class RadixPrefixCache(BasePrefixCache):
             child_node = node.children.get(self.key_fn(input_ids[prefix_len:]))
             # 不存在被命中的孩子节点
             if child_node is None:
-                return node, prefix_len
+                return node, prefix_len, matched_evictable_slots
 
             # 更新被命中节点
             node = child_node
@@ -167,21 +177,25 @@ class RadixPrefixCache(BasePrefixCache):
             match_len = align_down(match_len, self.page_size)
             prefix_len += match_len
 
+            # 统计本次匹配到的可淘汰 Slot，不修改引用计数
+            if node.ref_count == 0:
+                matched_evictable_slots += match_len
+
             # 命中未完全覆盖 node，则切分 node，搜索就此结束
             if match_len != node.length:
                 node = node.split_at(match_len)
                 node.timestamp = tic
-                return node, prefix_len
+                return node, prefix_len, matched_evictable_slots
 
             # 命中完全覆盖 node，则继续向后搜索
             node.timestamp = tic
 
-        return node, prefix_len 
+        return node, prefix_len, matched_evictable_slots
 
 
-    def match_prefix(self, input_ids: torch.Tensor) -> MatchResult:
-        node, prefix_len = self._tree_walk(input_ids)
-        return MatchResult(RadixCacheHandle(prefix_len, node))
+    def match_prefix(self, input_ids: torch.Tensor) -> Tuple[MatchResult, int]:
+        node, prefix_len, matched_evictable_slots = self._tree_walk(input_ids)
+        return MatchResult(RadixCacheHandle(prefix_len, node)), matched_evictable_slots
 
     def insert_prefix(
         self,
@@ -193,7 +207,7 @@ class RadixPrefixCache(BasePrefixCache):
         input_ids, indices = input_ids[:insert_len], indices[:insert_len]
         
         # 查找已缓存的前缀
-        node, prefix_len = self._tree_walk(input_ids)
+        node, prefix_len, _ = self._tree_walk(input_ids)
 
         # 处理不存在前缀缓存的部分
         if prefix_len != insert_len:
