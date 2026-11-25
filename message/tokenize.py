@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import ClassVar, List, Dict
 
-from .base import BaseMessage
+from .base import BaseMessage, BaseBatchMessage
 from .utils import register_message
 from ..protocol.sampling_params import SamplingParams
 from ..protocol.generate_params import GenerateParams
@@ -18,7 +18,7 @@ class TokenizeMsg(BaseMessage):
 
 @register_message
 @dataclass
-class TokenizeBatchMsg(BaseMessage):
+class TokenizeBatchMsg(BaseBatchMessage):
     message_type: ClassVar[str] = "tokenize-batch"
     data: List[TokenizeMsg]
 
@@ -32,7 +32,7 @@ class DeTokenizeMsg(BaseMessage):
 
 @register_message
 @dataclass
-class DeTokenizeBatchMsg(BaseMessage):
+class DeTokenizeBatchMsg(BaseBatchMessage):
     message_type: ClassVar[str] = "detokenize-batch"
     data: List[DeTokenizeMsg]
 
@@ -44,6 +44,6 @@ class TokenizeAbortMsg(BaseMessage):
 
 @register_message
 @dataclass
-class TokenizeAbortBatchMsg(BaseMessage):
+class TokenizeAbortBatchMsg(BaseBatchMessage):
     message_type: ClassVar[str] = "tokenize-abort-batch"
     data: List[TokenizeAbortMsg]

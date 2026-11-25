@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import ClassVar, List
 
-from .base import BaseMessage
+from .base import BaseMessage, BaseBatchMessage
 from .utils import register_message
 
 
@@ -15,6 +15,6 @@ class FrontendMsg(BaseMessage):
 
 @register_message
 @dataclass
-class FrontendBatchMsg(BaseMessage):
+class FrontendBatchMsg(BaseBatchMessage):
     message_type: ClassVar[str] = "frontend-batch"
     data: List[FrontendMsg]

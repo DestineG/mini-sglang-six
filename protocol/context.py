@@ -9,6 +9,7 @@ from ..moe.base import BaseMoeBackend
 
 @dataclass
 class Context:
+    num_pages: int
     page_size: int
     page_table: torch.Tensor
     kv_cache: BaseKVCachePool

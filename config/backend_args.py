@@ -16,13 +16,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class BackendArgs(CommonArgs):
-    max_extend_tokens: int = 8192
-    cache_type: str = "radix"
-
+    eos_token_id: int
     model_path: str
     tp_info: DistributedInfo
     dtype: torch.dtype
+    max_extend_tokens: int = 8192
+    cache_type: str = "radix"
     max_running_req: int = 256
+    needed_dummy_request: bool = True
     attention_backend: str = "auto"
     moe_backend: str = "auto"
     cuda_graph_bs: List[int] | None = None
