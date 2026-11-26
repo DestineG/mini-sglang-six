@@ -14,16 +14,29 @@ class BaseRequestManager(ABC):
     def empty(self):
         return len(self.requests) == 0
 
-    def add(self, requests: List[Request]):
-        for req in requests:
-            # 检查待添加的 UID 是否已存在
-            if req.uid in self.uid_map:
-                raise ValueError(f"Duplicate request uid: {req.uid}")
+    def add(self, requests: List[Request], insert_idx: int = -1):
+        # 检查待添加的 UID 是否重复
+        new_uids = [req.uid for req in requests]
 
-            # 更新 List
-            self.requests.append(req)
-            
-            # 更新 UID 索引
+        if len(new_uids) != len(set(new_uids)):
+            raise ValueError("Duplicate uid in input requests")
+
+        duplicate_uids = set(new_uids) & self.uid_map.keys()
+        if duplicate_uids:
+            raise ValueError(f"Duplicate request uid: {duplicate_uids}")
+
+        # 默认追加到末尾
+        if insert_idx == -1:
+            insert_idx = len(self.requests)
+
+        if not 0 <= insert_idx <= len(self.requests):
+            raise IndexError(f"Invalid insert index: {insert_idx}")
+
+        # 更新 List
+        self.requests[insert_idx:insert_idx] = requests
+
+        # 更新 UID 索引
+        for req in requests:
             self.uid_map[req.uid] = req
 
     def remove(self, requests: List[Request]):

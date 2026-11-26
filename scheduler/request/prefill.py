@@ -33,11 +33,13 @@ class PrefillManager(BaseRequestManager):
             if req.is_forwarding:
                 continue
 
+            # 会导致 chunkedprefill 请求无法用已分配空闲 slot 进行预填充
             if page_budget == 0:
                 break
             
             # 处理 Prefill
             if req.status == RequestStatus.PREFILL:
+                # 前缀匹配
                 match_result, match_evictable_slots = self.cache_manager.match_req(req)
                 cached_handle = match_result.cuda_handle
                 req_max_schedule_len = req.prompt_len - cached_handle.cached_len
@@ -70,6 +72,7 @@ class PrefillManager(BaseRequestManager):
                     self.remove([req])
                     continue
 
+                # 最大调度限制应用
                 schedule_len = min(max_schedule_len, req_max_schedule_len)
 
                 # 仅仅 evictable 部分就已经超预算那就暂不纳入
@@ -154,4 +157,67 @@ class PrefillManager(BaseRequestManager):
         sampled_tokens: List[torch.Tensor],
         eos_token_id: int
     ) -> Tuple[List[Request], List[Request]]:
-        ...
+        chunked_reqs: List[Request] = []
+        decode_reqs: List[Request] = []
+        finished_reqs: List[Request] = []
+        remove_reqs: List[Request] = []
+        assert len(requests) == len(sampled_tokens)
+        for req, token_id in zip(requests, sampled_tokens):
+            assert req.is_forwarding
+
+            new_cached_len = req.cached_len + req.schedule_len
+            remain_schedule_len = req.prompt_len - new_cached_len
+
+            # 继续预填充，状态变更为 chunkedprefill 移动到队列头部，不处理采样结果
+            if remain_schedule_len > 1:
+                req.is_forwarding = False
+                req.status = RequestStatus.CHUNKEDPREFILL
+                req.cached_len = new_cached_len
+                req.schedule_len = 0
+                remove_reqs.append(req)
+                chunked_reqs.append(req)
+
+            # 待调度长度为1，转入 Decode，不处理采样结果
+            elif remain_schedule_len == 1:
+                req.is_forwarding = False
+                req.status = RequestStatus.DECODE
+                req.cached_len = new_cached_len
+                req.schedule_len = 1
+                remove_reqs.append(req)
+                decode_reqs.append(req)
+
+            # 预填充完毕，加入采样结果
+            elif remain_schedule_len == 0:
+                req.is_forwarding = False
+                req.status = RequestStatus.DECODE
+                req.cached_len = new_cached_len
+                req.schedule_len = 1
+                req.output_len += 1
+                token_id = token_id.reshape(1).to(req.input_ids)
+                req.input_ids = torch.cat((req.input_ids, token_id))
+                remove_reqs.append(req)
+
+                finished = (
+                    req.output_len >= req.generate_params.max_tokens
+                    or (
+                        not req.generate_params.ignore_eos
+                        and token_id.item() == eos_token_id
+                    )
+                )
+                if finished:
+                    req.status = RequestStatus.FINISHED
+                    finished_reqs.append(req)
+                else:
+                    decode_reqs.append(req)
+
+            # 报错
+            else:
+                raise ValueError
+
+        # 移除 remove_reqs
+        self.remove(remove_reqs)
+
+        # 放回 chunkedprefill 请求
+        self.add(chunked_reqs, insert_idx=0)
+
+        return decode_reqs, finished_reqs
