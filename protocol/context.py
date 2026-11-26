@@ -4,7 +4,8 @@ import torch
 
 from ..attention.base import BaseAttnBackend
 from ..kvcache.base import BaseKVCachePool
-from ..moe.base import BaseMoeBackend
+# from ..moe.base import BaseMoeBackend
+from .request import Batch
 
 
 @dataclass
@@ -14,7 +15,8 @@ class Context:
     page_table: torch.Tensor
     kv_cache: BaseKVCachePool
     attn_backend: BaseAttnBackend
-    moe_backend: BaseMoeBackend | None = None
+    # moe_backend: BaseMoeBackend | None = None
+    _batch: Batch
 
 _GLOBAL_CTX: Context | None = None
 

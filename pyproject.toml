@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.165.0",
+    "flash-attn",
     "msgpack>=1.2.4",
     "numpy>=2.5.4",
     "prompt-toolkit>=3.0.53",

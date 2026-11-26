@@ -42,8 +42,13 @@ class Scheduler:
         )
 
         self.waiting_manager = WaitingManager()
-        self.prefill_manager = PrefillManager()
-        self.decode_manager = DecodeManager()
+        self.prefill_manager = PrefillManager(
+            table_manager=self.page_table_manager,
+            cache_manager=self.cache_manager
+        )
+        self.decode_manager = DecodeManager(
+            cache_manager=self.cache_manager
+        )
 
 
     def _exit(self):
