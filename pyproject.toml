@@ -3,21 +3,22 @@ name = "sglang"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
+    "apache-tvm-ffi>=0.1.16",
     "fastapi>=0.165.0",
-    "flash-attn",
     "msgpack>=1.2.4",
     "numpy>=2.5.4",
     "prompt-toolkit>=3.0.53",
     "psutil>=7.2.2",
     "pydantic>=2.14.3",
     "pyzmq>=27.3.0",
+    "sgl-kernel>=0.3.21",
     "transformers>=5.23.0",
     "uvicorn>=0.54.0",
 ]
 
 [project.optional-dependencies]
-cpu = ["torch"]
-cu130 = ["torch"]
+cpu = ["torch==2.9.1"]
+cu130 = ["torch==2.9.1", "flash-attn==2.8.3.post2", "ninja", "packaging", "setuptools", "wheel"]
 
 [tool.uv]
 conflicts = [
@@ -42,3 +43,6 @@ explicit = true
 name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
 explicit = true
+
+[tool.uv.extra-build-dependencies]
+flash-attn = [{ requirement = "torch", match-runtime = true }, "packaging", "ninja", "psutil"]

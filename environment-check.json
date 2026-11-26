@@ -1,0 +1,1 @@
+{"passed": true, "torch": "2.9.1+cu130", "cuda": "13.0", "gpu": "NVIDIA GeForce RTX 5090", "max_abs_error": 0.0}

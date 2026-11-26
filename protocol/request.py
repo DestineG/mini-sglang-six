@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import List, TYPE_CHECKING
 from enum import Enum
@@ -42,3 +44,7 @@ class Request:
 class Batch:
     requests: List[Request]
     attn_metadata: BaseAttnMetadata
+
+    @property
+    def size(self):
+        return len(self.requests)

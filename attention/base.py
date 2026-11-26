@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List
+import torch
 
 
 if TYPE_CHECKING:
@@ -9,55 +12,54 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class BaseAttnMetadata(ABC):
-    ...
-
-@dataclass
 class BaseCaptureData:
-    seq_lens: torch.Tensor
     positions: torch.Tensor
     cu_seqlens_q: torch.Tensor
     cu_seqlens_k: torch.Tensor
     page_table: torch.Tensor
+    kv_slot_indices: torch.Tensor
 
     @classmethod
     def create(
         cls,
         max_bs: int,
-        max_seq_len: int,
+        max_schedule_len: int,
+        max_pages_per_seq: int,
         device: torch.device,
         **kwargs
     ):
         return cls(
-            seq_lens=torch.ones(
-                (max_bs,),
-                dtype=torch.int32,
-                device=device
-            ),
             positions=torch.zeros(
-                (max_bs,),
-                dtype=torch.int32,
-                device=device
-            ),
-            cu_seqlens_k=torch.arange(
-                0,
-                max_bs + 1,
+                (max_bs * max_schedule_len,),
                 dtype=torch.int32,
                 device=device
             ),
             cu_seqlens_q=torch.arange(
-                0,
+                max_bs + 1,
+                dtype=torch.int32,
+                device=device
+            ),
+            cu_seqlens_k=torch.arange(
                 max_bs + 1,
                 dtype=torch.int32,
                 device=device
             ),
             page_table=torch.zeros(
-                (max_bs, max_seq_len),
+                (max_bs, max_pages_per_seq),
+                dtype=torch.int32,
+                device=device
+            ),
+            kv_slot_indices=torch.zeros(
+                (max_bs * max_schedule_len,),
                 dtype=torch.int32,
                 device=device
             ),
             **kwargs,
         )
+
+@dataclass
+class BaseAttnMetadata(ABC):
+    ...
 
 class BaseAttnBackend(ABC):
     @abstractmethod

@@ -38,6 +38,9 @@ def store_cache(
     # (num_total_slots, num_kv_head, head_dim) -> (num_total_slots, num_kv_head * head_dim)
     k_cache = k_cache.view(num_tokens, -1)
     v_cache = v_cache.view(num_tokens, -1)
+    num_tokens = k.shape[0]
+    k = k.view(num_tokens, -1)
+    v = v.view(num_tokens, -1)
     element_size = k_cache.shape[1] * k_cache.element_size()
     module = _jit_store_module(element_size)
     module.launch(k_cache, v_cache, indices, k, v)
