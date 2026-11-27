@@ -12,3 +12,5 @@ wheels/
 # Local test scripts and reports
 /tests/
 /test-results/
+/temp
+/kernel

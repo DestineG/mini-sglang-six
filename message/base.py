@@ -23,3 +23,13 @@ class BaseMessage:
 class BaseBatchMessage:
     message_type: ClassVar[str] = "base-batch"
     data: List[BaseMessage]
+
+    def append(self, msg: BaseMessage):
+        if not isinstance(msg, BaseMessage):
+            raise TypeError
+        self.data.append(msg)
+
+    def extend(self, msgs: BaseBatchMessage):
+        if not isinstance(msgs, BaseBatchMessage):
+            raise TypeError
+        self.data.extend(msgs.data)

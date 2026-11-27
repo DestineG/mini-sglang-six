@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class BaseCaptureData:
-    positions: torch.Tensor
     cu_seqlens_q: torch.Tensor
     cu_seqlens_k: torch.Tensor
     page_table: torch.Tensor
@@ -29,11 +28,6 @@ class BaseCaptureData:
         **kwargs
     ):
         return cls(
-            positions=torch.zeros(
-                (max_bs * max_schedule_len,),
-                dtype=torch.int32,
-                device=device
-            ),
             cu_seqlens_q=torch.arange(
                 max_bs + 1,
                 dtype=torch.int32,

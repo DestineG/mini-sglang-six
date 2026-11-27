@@ -20,6 +20,7 @@ from .cache import CacheManager
 from ..config.backend_args import BackendArgs
 from ..protocol.context import get_global_ctx
 from ..engine.engine import Engine
+from .communicator import SchedulerCommunicator
 
 
 logger = init_logger(__name__)
@@ -28,19 +29,30 @@ logger = init_logger(__name__)
 class Scheduler:
     def __init__(self, config: BackendArgs):
         self.config = config
+
+        # 执行器初始化
         self.engine = Engine(config)
-        self.ctx = get_global_ctx()
+
+        # 通信器初始化
+        self.communicator = SchedulerCommunicator(config, self.engine.tp_cpu_group)
+
+        # 全局 page table 管理器初始化
         self.page_table_manager = TableManager(
             max_running_req=self.config.max_running_req,
             max_seq_len=self.config.max_seq_len,
             needed_dummy_request=self.config.needed_dummy_request
         )
+
+        self.ctx = get_global_ctx()
+
+        # kv cache 管理器初始化
         self.cache_manager = CacheManager(
             num_pages=self.ctx.num_pages,
             page_size=self.ctx.page_size,
             page_table=self.page_table_manager.page_table
         )
 
+        # 请求管理器初始化
         self.waiting_manager = WaitingManager()
         self.prefill_manager = PrefillManager(
             table_manager=self.page_table_manager,
@@ -108,7 +120,6 @@ class Scheduler:
     def get_max_schedule_len(self, req: Request) -> int:
         decode_count = len(self.decode_manager.requests)
         prefill_count = len(self.prefill_manager.requests)
-        chunked_count = len(self.prefill_manager.chunked_requests)
 
         # 根据当前系统压力决定 Chunk Size
         if decode_count >= 64:

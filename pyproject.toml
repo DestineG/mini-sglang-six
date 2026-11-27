@@ -18,7 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cpu = ["torch==2.9.1"]
-cu130 = ["torch==2.9.1", "flash-attn==2.8.3.post2", "ninja", "packaging", "setuptools", "wheel"]
+cu130 = ["torch==2.9.1", "flash-attn==2.8.3.post2", "flashinfer-python", "ninja", "packaging", "setuptools", "wheel"]
 
 [tool.uv]
 conflicts = [
